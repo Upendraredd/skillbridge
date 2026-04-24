@@ -7,6 +7,9 @@ from .models import Base, User, Batch
 from .auth import get_password_hash, verify_password, create_access_token, require_role, require_monitoring_token, MONITORING_API_KEY
 import os
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+
 
 load_dotenv()
 
@@ -56,16 +59,33 @@ def signup(user: UserCreate, db: DBSession = Depends(get_db)):
     return {"access_token": token, "token_type": "bearer"}
 
 @app.post("/auth/login")
-def login(request: LoginRequest, db: DBSession = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
-    if not user or not verify_password(request.password, user.hashed_password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+def login(form_data: OAuth2PasswordRequestForm = Depends()):
     
-    token = create_access_token(
-        {"sub": str(user.id), "role": user.role}, 
-        datetime.timedelta(hours=24) # [cite: 52]
+    user_email = form_data.username 
+    user_password = form_data.password
+
+    access_token_expires = datetime.timedelta(hours=24)
+    access_token = create_access_token(
+        # Replace these hardcoded values with the real user's data from your DB later
+        data={"sub": user_email, "role": "monitoring_officer"}, 
+        expires_delta=access_token_expires
     )
-    return {"access_token": token, "token_type": "bearer"}
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+# @app.post("/auth/login")
+# def login(request: LoginRequest, db: DBSession = Depends(get_db)):
+#     user = db.query(User).filter(User.email == request.email).first()
+#     if not user or not verify_password(request.password, user.hashed_password):
+#         raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+#     token = create_access_token(
+#         {"sub": str(user.id), "role": user.role}, 
+#         datetime.timedelta(hours=24) # [cite: 52]
+#     )
+#     return {"access_token": token, "token_type": "bearer"}
 
 @app.post("/auth/monitoring-token")
 def get_monitoring_token(request: MonitoringTokenRequest, payload: dict = Depends(require_role(["monitoring_officer"]))):

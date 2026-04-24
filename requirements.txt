@@ -1,9 +1,9 @@
-fastapi==0.104.1
+fastapi>=0.110.0
+python-multipart>=0.0.9
 uvicorn==0.23.2
-sqlalchemy
-psycopg2-binary
+sqlalchemy>=2.0.35
+pg8000==1.30.3
 passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
 PyJWT==2.8.0
 python-dotenv==1.0.0
-pytest==7.4.3
-httpx==0.25.1
